@@ -1,6 +1,6 @@
-# python-ngrok
+# python3-ngrok
 
-Python bindings for ngrok local and Link APIs
+Python 3 bindings for ngrok local and Link APIs. Tested with Python 3.5.2. This is a fork of the Python 2 version [python-ngrok by peakwinter](https://github.com/peakwinter/python-ngrok).
 
 
 ## Use with local ngrok setups

@@ -1,7 +1,7 @@
 import datetime
 import json
-import urllib2
-from urllib import urlencode
+import urllib
+import urllib.request
 
 from collections import namedtuple
 
@@ -69,7 +69,7 @@ class Request:
             data = api("tunnels/%s" % tunnel)
             self.tunnel = Tunnel(data["config"], data["name"], data["uri"],
                 data["public_url"], data["proto"], data["metrics"])
-        except:
+        except Exception:
             self.tunnel = None
 
     def __repr__(self):
@@ -82,17 +82,18 @@ class Request:
 
 def api(endpoint, method="GET", data=None, params=[]):
     base_url = BASE_URL or "http://127.0.0.1:4040/"
-    request = urllib2.Request("%sapi/%s" % (base_url, endpoint))
+    request = urllib.request.Request("%sapi/%s" % (base_url, endpoint))
     if method != "GET":
         request.get_method = lambda: method
     if params:
-        endpoint += "?%s" % urlencode([(x, params[x]) for x in params])
+        endpoint += "?%s" % urllib.urlencode([(x, params[x]) for x in params])
     request.add_header("Content-Type", "application/json")
-    response = urllib2.urlopen(request, json.dumps(data) if data else None)
-    try:
-        return json.loads(response.read())
-    except:
-        return None
+    with urllib.request.urlopen(request, json.dumps(data) if data else None) as response:
+        try:
+            response_data = response.read().decode('utf-8')
+            return json.loads(response_data)
+        except Exception:
+            return None
 
 def get_tunnels():
     tunnels = []
@@ -107,7 +108,7 @@ def get_tunnel(id):
         data = api("tunnels/%s" % str(id))
         return Tunnel(data["config"], data["name"], data["uri"], data["public_url"],
             data["proto"], data["metrics"])
-    except:
+    except Exception:
         return None
 
 def get_requests():
@@ -123,5 +124,5 @@ def get_request(id):
         data = api("requests/http/%s" % str(id))
         return Request(x["id"], x["tunnel_name"], x["remote_addr"], x["start"],
             x["duration"], x["request"], x["response"])
-    except:
+    except Exception:
         return None

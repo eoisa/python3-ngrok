@@ -1,7 +1,8 @@
 import base64
 import datetime
 import json
-import urllib2
+import urllib
+import urllib.request
 
 
 PUBLIC_ID = ""
@@ -136,16 +137,17 @@ def api(endpoint, method="GET", data=None):
     if not PUBLIC_ID or not SECRET_TOKEN:
         raise Exception("Public ID and secret token must be declared")
     authstr = base64.encodestring('%s:%s' % (PUBLIC_ID, SECRET_TOKEN)).replace('\n', '')
-    request = urllib2.Request("https://api.ngrok.com/%s" % endpoint)
+    request = urllib.request.Request("https://api.ngrok.com/%s" % endpoint)
     if method != "GET":
         request.get_method = lambda: method
     request.add_header("Authorization", "Basic %s" % authstr)
     request.add_header("Content-Type", "application/json")
-    response = urllib2.urlopen(request, json.dumps(data) if data else None)
-    try:
-        return json.loads(response.read())
-    except:
-        return None
+    with urllib.request.urlopen(request, json.dumps(data) if data else None) as response:
+        try:
+            response_data = response.read().decode('utf-8')
+            return json.loads(response_data)
+        except Exception:
+            return None
 
 def get_tunnels():
     tunnels = []
@@ -160,7 +162,7 @@ def get_tunnel(id):
         data = api("tunnels/%s" % str(id))
         return Tunnel(data["id"], data["clients"], data["proto"], data["public_url"],
             data["metadata"], data["started_at"])
-    except:
+    except Exception:
         return None
 
 def get_domains():
@@ -175,7 +177,7 @@ def get_domain(id):
         data = api("reserved_domains/%s" % str(id))
         return Domain(data["domain"], data["id"], data["region"], data["uri"],
             data["created_at"])
-    except:
+    except Exception:
         return None
 
 def get_tcp_addresses():
@@ -190,7 +192,7 @@ def get_tcp_address(id):
         data = api("reserved_addrs/%s" % str(id))
         return Address(data["addr"], data["id"], data["region"], data["uri"],
             data["created_at"])
-    except:
+    except Exception:
         return None
 
 def get_credentials():
@@ -206,5 +208,5 @@ def get_credential(id):
         data = api("credentials/%s" % str(id))
         return Credential(data["id"], data["uri"], data["token"], data["description"],
             data["acl"], data["created_at"])
-    except:
+    except Exception:
         return None
